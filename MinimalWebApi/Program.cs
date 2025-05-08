@@ -1,6 +1,9 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using MinimalWebApi.Repositories;
 using MinimalWebApi.Services;
+using MinimalWebApi.Validators;
 
 namespace MinimalWebApi;
 
@@ -9,11 +12,14 @@ public static class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
+        
         builder.Services.AddControllers();
+
+        builder.Services.AddFluentValidationAutoValidation();
+        builder.Services.AddValidatorsFromAssemblyContaining<UserValidator>();
+        
         builder.Services.AddOpenApi();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
-
         builder.Services.AddScoped<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
 
         

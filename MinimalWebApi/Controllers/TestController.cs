@@ -14,4 +14,3 @@ public class TestController : ControllerBase
         return Ok("Welcome! You are authorized to view this home data.");
     }
 }
-

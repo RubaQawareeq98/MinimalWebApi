@@ -14,7 +14,6 @@ public class UserRepository : IUserRepository
             Password = "123456"
         }
         ];
-    
 
     public Task<User?> GetUserAsync(string username, string password)
     {

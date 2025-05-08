@@ -6,7 +6,7 @@ using MinimalWebApi.Repositories;
 
 namespace MinimalWebApi.Services;
 
-public class JwtTokenGeneratorService(IConfiguration configuration, IUserRepository userRepository, ILogger<JwtTokenGeneratorService> logger) : IJwtTokenGeneratorService
+public class JwtTokenGeneratorService(IConfiguration configuration, IUserRepository userRepository) : IJwtTokenGeneratorService
 {
     public async Task<string?> GenerateToken(string? username, string? password)
     {
@@ -14,7 +14,6 @@ public class JwtTokenGeneratorService(IConfiguration configuration, IUserReposit
         {
             return null;
         }
-        logger.LogInformation("Generating JWT token");
         var user = await userRepository.GetUserAsync(username, password);
         if (user is null)
         {
