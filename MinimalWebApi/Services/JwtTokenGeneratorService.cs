@@ -2,11 +2,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using MinimalWebApi.Configurations;
 using MinimalWebApi.Repositories;
 
 namespace MinimalWebApi.Services;
 
-public class JwtTokenGeneratorService(IConfiguration configuration, IUserRepository userRepository) : IJwtTokenGeneratorService
+public class JwtTokenGeneratorService(JwtConfiguration configuration, IUserRepository userRepository) : IJwtTokenGeneratorService
 {
     public async Task<string?> GenerateToken(string? username, string? password)
     {
@@ -21,7 +22,7 @@ public class JwtTokenGeneratorService(IConfiguration configuration, IUserReposit
         }
         
         var securityKey = new SymmetricSecurityKey(
-            Convert.FromBase64String(configuration["Authentication:SecretKey"] ?? throw new InvalidOperationException("Secret Key is required")));
+            Convert.FromBase64String(configuration.SecretKey));
             
         var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         
@@ -33,8 +34,8 @@ public class JwtTokenGeneratorService(IConfiguration configuration, IUserReposit
         };
 
         var jwt = new JwtSecurityToken(
-            configuration["Authentication:Issuer"],
-            configuration["Authentication:Audience"],
+            configuration.Issuer,
+            configuration.Audience,
             claimsForToken,
             DateTime.UtcNow,
             DateTime.UtcNow.AddHours(1),
@@ -49,7 +50,7 @@ public class JwtTokenGeneratorService(IConfiguration configuration, IUserReposit
     public ClaimsPrincipal? ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(configuration["Authentication:SecretKey"] ?? throw new InvalidOperationException("Secret Key is required"));
+        var key = Encoding.UTF8.GetBytes(configuration.SecretKey);
 
         var parameters = new TokenValidationParameters
         {
@@ -57,8 +58,8 @@ public class JwtTokenGeneratorService(IConfiguration configuration, IUserReposit
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = configuration["Authentication:Issuer"],
-            ValidAudience = configuration["Authentication:Audience"],
+            ValidIssuer = configuration.Issuer,
+            ValidAudience = configuration.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
 

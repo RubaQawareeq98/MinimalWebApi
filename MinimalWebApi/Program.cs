@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
+using MinimalWebApi.Configurations;
 using MinimalWebApi.Repositories;
 using MinimalWebApi.Services;
 using MinimalWebApi.Validators;
@@ -13,6 +14,14 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
+        var jwtConfig = builder.Configuration
+            .GetSection("Authentication")
+            .Get<JwtConfiguration>();
+        
+        ArgumentNullException.ThrowIfNull(jwtConfig);
+
+        builder.Services.AddSingleton(jwtConfig);
+        
         builder.Services.AddControllers();
 
         builder.Services.AddFluentValidationAutoValidation();
@@ -24,21 +33,21 @@ public static class Program
 
         
         builder.Services.AddAuthentication("Bearer")
-            .AddJwtBearer("Bearer", options => 
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Authentication:Issuer"],
-                    ValidAudience = builder.Configuration["Authentication:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Convert.FromBase64String(builder.Configuration["Authentication:SecretKey"] ?? string.Empty)
-                    )
-                        
-                }
-            );
+            .AddJwtBearer("Bearer", options =>
+            {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtConfig.Issuer,
+                        ValidAudience = jwtConfig.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Convert.FromBase64String(jwtConfig.SecretKey)
+                        )
+                    };
+            });
 
         var app = builder.Build();
 
